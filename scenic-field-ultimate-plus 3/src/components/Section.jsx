@@ -1,0 +1,2 @@
+import React from 'react'
+export default function Section({title, children, actions}){return (<div className='card'><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}><h2>{title}</h2>{actions}</div>{children}</div>)}

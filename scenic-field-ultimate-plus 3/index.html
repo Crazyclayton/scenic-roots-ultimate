@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Scenic Roots — Ultimate+</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/src/assets/icon-192.png">
+<style>
+:root{--safe-bottom:env(safe-area-inset-bottom);--fg:#f4f4f5;--muted:#b5b6b8;--bg:#0b0b0c;--card:#111113;--line:#1e1f22;--primary:#2ecc71;--warn:#ffb020;--danger:#ff5d5d}
+*{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--fg)}
+#root{min-height:100dvh}
+@media print{
+  body{ background:#fff; color:#000 }
+  .no-print{ display:none !important }
+  .print-quote{ padding:24px; font-family:Georgia,serif }
+  .print-quote h1{ margin:0 0 6px 0 }
+  .print-quote .muted{ color:#333 }
+  .print-quote table{ width:100%; border-collapse:collapse; margin-top:10px }
+  .print-quote th,.print-quote td{ border:1px solid #ccc; padding:8px }
+  .print-quote .total{ font-weight:700; }
+}
+</style>
+</head><body>
+<div id="root"></div>
+<script type="module" src="/src/main.jsx"></script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{})})}
+</script>
+</body></html>
