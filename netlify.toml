@@ -1,0 +1,4 @@
+[build]
+base = "scenic-field-ultimate-plus 3"
+command = "npm run build"
+publish = "dist"
