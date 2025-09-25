@@ -1,0 +1,149 @@
+{
+  "business": {
+    "name": "Scenic Roots Lawn Care & Landscaping",
+    "phone": "615-308-8477",
+    "email": "info@scenicroots.net",
+    "color": "#1c7c3e"
+  },
+  "scopePresets": [
+    "Routine mowing (weekly/bi-weekly) with professional striping finish",
+    "Edging along sidewalks, driveways, and curbs",
+    "String trimming around obstacles, fence lines, and beds",
+    "Blowing of debris from hard surfaces",
+    "Seasonal weed control applications",
+    "Fertilization programs (spring, summer, fall)",
+    "Aeration & overseeding",
+    "Lawn leveling & topdressing",
+    "Sod installation and repair patches",
+    "Mulch installation (hardwood, dyed, pine, etc.)",
+    "Decorative rock/gravel installation",
+    "Flower bed design, creation, and renovation",
+    "Planting (trees, shrubs, perennials, annuals)",
+    "Seasonal color change-outs (spring/summer/fall flowers)",
+    "Landscape edging (stone, metal, paver, natural borders)",
+    "Soil/topsoil delivery and grading",
+    "Sand delivery and installation",
+    "Drainage solutions (french drains, swales, downspout extensions)",
+    "Retaining walls (timber, block, stone)",
+    "Landscape lighting installation",
+    "Shrub trimming and pruning",
+    "Hedge shaping and maintenance",
+    "Tree trimming (small/medium)",
+    "Tree removal and stump grinding",
+    "Storm damage clean-up",
+    "Spring clean-ups (leaf removal, debris clearing, bed prep)",
+    "Fall clean-ups (leaf collection, disposal, storm prep)",
+    "Leaf vacuuming and hauling (yard waste, trailer service)",
+    "Gutter cleaning (single-story only)",
+    "Snow/ice removal",
+    "Holiday lighting installation & removal",
+    "Patio installation (paver, stone, gravel base)",
+    "Walkways and garden paths",
+    "Decorative borders and edging",
+    "Raised garden beds & planters",
+    "Deck building (small to mid-scale: 4×8, 10×16, etc.)",
+    "Custom builds (benches, planters, outdoor structures)",
+    "Common area mowing & landscaping",
+    "Seasonal flower and mulch refresh",
+    "Bush and hedge maintenance",
+    "Trash/debris pickup from grounds",
+    "Slope & drainage management",
+    "Entryway and signage landscaping",
+    "Large property leaf removal and hauling",
+    "Yard health reports (inspection & recommendations)",
+    "Pest/disease spotting & recommendations",
+    "Irrigation troubleshooting (basic repairs, head adjustments)",
+    "Soil amendments (lime, compost, sand mix)",
+    "Property clean-outs (overgrowth clearing, fence-line reclaim)",
+    "Pressure washing (driveways, patios, siding)",
+    "Fence line clearing & brush cutting",
+    "Gravel driveway refresh & regrading",
+    "Residential seasonal packages (basic, standard, premium)",
+    "Monthly landscape maintenance contracts",
+    "HOA & commercial maintenance contracts",
+    "Add-on seasonal upsells (mulch, aeration, flower rotation)"
+  ],
+  "termsPresets": [
+    "50% deposit to schedule; balance due upon completion. Proposal valid 15 days.",
+    "30% deposit to schedule; balance due upon completion. Proposal valid 30 days."
+  ],
+  "discountPresets": [
+    {"label": "None", "value": 0},
+    {"label": "Existing Customer (−15%)", "value": -15},
+    {"label": "One-Time Job (+10%)", "value": 10},
+    {"label": "Seasonal Discount (−5%)", "value": -5}
+  ],
+  "taxPresets": [
+    {"label": "None", "value": 0},
+    {"label": "Sales Tax (9.75%)", "value": 9.75}
+  ],
+  "depositPresets": [
+    {"label": "None", "value": 0},
+    {"label": "30%", "value": 30},
+    {"label": "50%", "value": 50}
+  ],
+  "tiers": {
+    "Basic": [
+      "Lawn Mowing (up to 1/4 acre)",
+      "Edging/Trimming Only"
+    ],
+    "Standard": [
+      "Lawn Mowing (1/4 - 1/2 acre)",
+      "Edging/Trimming Only",
+      "Flower Bed Clean-Up & Prep"
+    ],
+    "Premium": [
+      "Lawn Mowing (1/2 - 1 acre)",
+      "Mulch Installation (includes barrier)",
+      "Hedge Trimming (per 10 ft)"
+    ]
+  },
+  "categories": [
+    {
+      "name": "Lawn Maintenance",
+      "items": [
+        {"id": "mow_quarter", "label": "Lawn Mowing (up to 1/4 acre)", "unit": "visit", "price": 45},
+        {"id": "mow_half", "label": "Lawn Mowing (1/4 - 1/2 acre)", "unit": "visit", "price": 62.5},
+        {"id": "mow_full", "label": "Lawn Mowing (1/2 - 1 acre)", "unit": "visit", "price": 85},
+        {"id": "edging", "label": "Edging/Trimming Only", "unit": "visit", "price": 25},
+        {"id": "seeding", "label": "Grass Seeding (per 1,000 sq ft)", "unit": "app", "price": 92.5},
+        {"id": "fertilizing", "label": "Fertilizing (per application)", "unit": "app", "price": 75}
+      ]
+    },
+    {
+      "name": "Mulch & Flower Beds",
+      "items": [
+        {"id": "mulch_install", "label": "Mulch Installation (includes barrier)", "unit": "yard", "price": 110},
+        {"id": "mulch_only", "label": "Mulch Only (delivery & spread)", "unit": "yard", "price": 75},
+        {"id": "bed_cleanup", "label": "Flower Bed Clean-Up & Prep", "unit": "visit", "price": 90},
+        {"id": "bed_install", "label": "New Flower Bed Install", "unit": "flat", "price": 500},
+        {"id": "rock_install", "label": "Rock Installation (decorative)", "unit": "ton", "price": 165}
+      ]
+    },
+    {
+      "name": "Trimming & Tree Services",
+      "items": [
+        {"id": "hedge_trim", "label": "Hedge Trimming (per 10 ft)", "unit": "length", "price": 60},
+        {"id": "small_tree_trim", "label": "Small Tree Trimming (under 12 ft)", "unit": "flat", "price": 132.5},
+        {"id": "tree_removal", "label": "Tree/Brush Removal", "unit": "flat", "price": 237.5}
+      ]
+    },
+    {
+      "name": "Clean-Ups & Seasonal",
+      "items": [
+        {"id": "spring_cleanup", "label": "Spring/Fall Yard Cleanup", "unit": "flat", "price": 312.5},
+        {"id": "gutter_clean", "label": "Gutter Cleaning (1-story)", "unit": "flat", "price": 110},
+        {"id": "pressure_wash", "label": "Pressure Washing (per sq ft)", "unit": "sqft", "price": 0.4}
+      ]
+    },
+    {
+      "name": "Landscaping & Design",
+      "items": [
+        {"id": "design_plan", "label": "Landscape Design Plan (Basic)", "unit": "flat", "price": 125},
+        {"id": "weed_barrier", "label": "Weed Barrier Replacement", "unit": "sqft", "price": 1.0},
+        {"id": "planting", "label": "Planting (flowers, perennials)", "unit": "plant", "price": 10},
+        {"id": "haul_off", "label": "Haul-Off/Debris Disposal", "unit": "load", "price": 65}
+      ]
+    }
+  ]
+}

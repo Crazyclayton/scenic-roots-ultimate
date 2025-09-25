@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scenic Roots Quoter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- App stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+  <!-- External libraries for export functionality -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <img src="assets/logo.png" alt="Scenic Roots logo" class="logo">
+    <h1 class="title">Scenic Roots Quoter</h1>
+  </header>
+  <div id="controls" class="controls">
+    <button id="addLine">Add Item</button>
+    <select id="tierPreset">
+      <option value="">Tier Presets...</option>
+    </select>
+    <button id="saveLocal">Save</button>
+    <button id="loadLocal">Load</button>
+    <button id="clearLines">Clear</button>
+    <button id="viewEditor">Edit</button>
+    <button id="viewProposal">Client Proposal</button>
+    <button id="viewQuote">Quick Quote</button>
+    <button id="viewAgreement">Agreement Form</button>
+  </div>
+  <main>
+    <!-- Editor view where lines can be added and edited -->
+    <section id="editorView">
+      <table id="quoteTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Service</th>
+            <th>Qty</th>
+            <th>Unit Price</th>
+            <th>Scope</th>
+            <th>Photos</th>
+            <th>Subtotal</th>
+            <th>Remove</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+      <div id="summary">
+        <div>
+          <label for="globalScope">Global Scope:</label>
+          <select id="globalScope">
+            <option value="">-- select --</option>
+          </select>
+        </div>
+        <div>
+          <label for="termsSelect">Terms:</label>
+          <select id="termsSelect">
+            <option value="">-- select --</option>
+          </select>
+        </div>
+        <div>
+          <label for="discount">Discount/Markup:</label>
+          <select id="discount">
+            <option value="">None</option>
+          </select>
+        </div>
+        <div>
+          <label for="tax">Tax:</label>
+          <select id="tax">
+            <option value="">None</option>
+          </select>
+        </div>
+        <div>
+          <label for="deposit">Deposit:</label>
+          <select id="deposit">
+            <option value="">None</option>
+          </select>
+        </div>
+        <div id="totals"></div>
+      </div>
+    </section>
+    <!-- Output view used for proposals, quotes and agreements -->
+    <section id="outputView" style="display:none;">
+      <div id="clientOutput"></div>
+      <div class="export-buttons">
+        <button id="exportPNG">Export PNG</button>
+        <button id="exportPDF">Export PDF</button>
+      </div>
+    </section>
+  </main>
+  <!-- Application logic -->
+  <script type="module" src="brand-app.js"></script>
+</body>
+</html>
