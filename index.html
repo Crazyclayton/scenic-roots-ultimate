@@ -239,19 +239,6 @@
                 <!-- content inserted dynamically -->
             </div>
 
-        <!-- Signature modal for quotes -->
-        <div id="signature-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1000;">
-            <div style="background:#fff;padding:1rem;border-radius:4px;max-width:400px;width:90%;">
-                <h3>Signature</h3>
-                <p>Please sign below using your mouse or finger.</p>
-                <canvas id="signature-canvas" width="350" height="200" style="border:1px solid #ccc;"></canvas>
-                <div style="margin-top:0.5rem;display:flex;gap:0.5rem;">
-                    <button class="primary" id="save-signature-btn">Save Signature</button>
-                    <button class="secondary" id="clear-signature-btn">Clear</button>
-                    <button class="secondary" id="cancel-signature-btn">Cancel</button>
-                </div>
-            </div>
-        </div>
         </section>
 
         <!-- Jobs Section -->
@@ -391,6 +378,28 @@
                 <tbody>
                 </tbody>
             </table>
+
+            <!-- Time Log Edit Modal -->
+            <div id="timelog-edit-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:1000;">
+                <div style="background:#fff;padding:1rem;border-radius:4px;max-width:400px;width:90%;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+                    <h3>Edit Time Log</h3>
+                    <form id="timelog-edit-form">
+                        <input type="hidden" id="edit-timelog-id" />
+                        <label for="edit-timelog-date">Date</label>
+                        <input type="date" id="edit-timelog-date" required />
+                        <label for="edit-timelog-start">Start Time</label>
+                        <input type="time" id="edit-timelog-start" required />
+                        <label for="edit-timelog-end">End Time</label>
+                        <input type="time" id="edit-timelog-end" required />
+                        <label for="edit-timelog-hours">Hours (optional)</label>
+                        <input type="number" id="edit-timelog-hours" step="0.01" min="0" />
+                        <div style="margin-top:0.5rem;display:flex;justify-content:flex-end;gap:0.5rem;">
+                            <button type="button" class="secondary" id="cancel-timelog-edit-btn">Cancel</button>
+                            <button type="submit" class="primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </section>
 
         <!-- Tasks & Reminders Section -->
@@ -966,19 +975,11 @@
                 html += '</div>';
             }
             html += `<p><strong>Total:</strong> $${quote.total.toFixed(2)}</p>`;
-            // Display signature if present
-            if (quote.signature) {
-                html += `<p><strong>Signature:</strong></p><img src="${quote.signature}" alt="Signature" style="max-width:200px;border:1px solid #ccc;">`;
-            }
-            // Buttons: Print / Mail / Edit / Sign / Back
+            // Buttons: Print / Mail / Edit / Back
             html += '<div class="actions">';
             html += `<button class="primary" onclick="printQuote(${quote.id})">Print / Save</button>`;
             html += `<button class="secondary" onclick="emailQuote(${quote.id})">Email</button>`;
             html += `<button class="secondary" onclick="editQuote(${quote.id})">Edit</button>`;
-            // Show sign button if no signature yet
-            if (!quote.signature) {
-                html += `<button class="secondary" onclick="openSignaturePad(${quote.id})">Sign Quote</button>`;
-            }
             html += `<button class="secondary" onclick="backToQuoteList()">Back to list</button>`;
             html += '</div>';
             container.innerHTML = html;
@@ -999,28 +1000,100 @@
         window.printQuote = function(id) {
             const quote = quotes.find(q => q.id == id);
             const client = clients.find(c => c.id == quote.clientId);
-            // Build printable HTML
-            let printHtml = '<html><head><title>Quote</title><style>body{font-family:Arial; margin:20px;} table {border-collapse:collapse; width:100%;} th,td{border:1px solid #ddd; padding:8px;} th{background:#e9c46a;} </style></head><body>';
-            printHtml += `<h2>Quote</h2>`;
-            printHtml += `<p><strong>Date:</strong> ${new Date(quote.date).toLocaleString()}</p>`;
-            printHtml += `<p><strong>Client:</strong> ${client ? client.name : ''}</p>`;
-            printHtml += `<table><thead><tr><th>Service</th><th>Quantity</th><th>Price</th><th>Total</th></tr></thead><tbody>`;
+            // Build a printable Quick Quote sheet inspired by the provided template
+            // Define categories and associated service names
+            const categories = [
+                {
+                    name: 'Core Lawn Care',
+                    items: [
+                        'Lawn Mowing (up to 1/4 acre)',
+                        'Lawn Mowing (1/4 - 1/2 acre)',
+                        'Lawn Mowing (1/2 - 1 acre)',
+                        'Edging/Trimming Only',
+                        'Grass Seeding (per 1,000 sq ft)',
+                        'Fertilizing (per application)'
+                    ]
+                },
+                {
+                    name: 'Landscaping Upgrades',
+                    items: [
+                        'Mulch Installation (per yard)',
+                        'Mulch Only (delivery & spread per yard)',
+                        'Bed Clean-Up & Prep',
+                        'Flower Bed Installation (new)',
+                        'Rock Installation (per ton)',
+                        'Hedge Trimming (per 10 ft)',
+                        'Small Tree Trimming (under 12 ft)',
+                        'Tree/Brush Removal',
+                        'Landscape Design Plan (Basic)',
+                        'Weed Barrier Replacement (per sq ft)',
+                        'Planting (flowers/perennials per plant)',
+                        'Haul-Off/Debris Disposal'
+                    ]
+                },
+                {
+                    name: 'Seasonal Services',
+                    items: [
+                        'Spring/Fall Yard Cleanup',
+                        'Gutter Cleaning (1-story)',
+                        'Pressure Washing (per sq ft)'
+                    ]
+                }
+            ];
+            // Map selected services for quick lookup
+            const selectedMap = {};
             quote.items.forEach(item => {
-                const service = services.find(s => s.id == item.serviceId);
-                const lineTotal = service.price * item.quantity;
-                printHtml += `<tr><td>${service.name}</td><td>${item.quantity}</td><td>$${service.price.toFixed(2)}</td><td>$${lineTotal.toFixed(2)}</td></tr>`;
+                const svc = services.find(s => s.id === item.serviceId);
+                if (svc) {
+                    selectedMap[svc.name] = {
+                        quantity: item.quantity,
+                        price: svc.price,
+                        total: svc.price * item.quantity
+                    };
+                }
             });
-            printHtml += `</tbody></table>`;
-            printHtml += `<p><strong>Notes:</strong> ${quote.notes || ''}</p>`;
-            printHtml += `<h3>Total: $${quote.total.toFixed(2)}</h3>`;
-            // include notes
-            if (quote.notes) {
-                printHtml += `<p><strong>Scope of Work:</strong><br>${quote.notes.replace(/\n/g, '<br>')}</p>`;
-            }
-            // include signature if present
-            if (quote.signature) {
-                printHtml += `<p><strong>Signature:</strong><br><img src="${quote.signature}" alt="Signature" style="max-width:200px;border:1px solid #ccc;"></p>`;
-            }
+            let printHtml = '<html><head><title>Quick Quote</title>';
+            printHtml += '<style>';
+            printHtml += 'body{font-family:Arial, sans-serif; margin:20px; color:#333;}';
+            printHtml += 'h1,h2,h3{color:#2a9d8f;}';
+            printHtml += '.category{margin-top:20px;}';
+            printHtml += '.item-line{display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px dotted #aaa;}';
+            printHtml += '.item-line span{white-space:nowrap;}';
+            printHtml += '.checkbox{margin-right:8px;}';
+            printHtml += '</style></head><body>';
+            printHtml += `<h2>Homeowner Quick Quote Sheet</h2>`;
+            // Client info
+            printHtml += `<p><strong>Name:</strong> ${client ? client.name : ''}</p>`;
+            printHtml += `<p><strong>Date:</strong> ${new Date(quote.date).toLocaleDateString()}</p>`;
+            printHtml += `<p><strong>Address:</strong> ${client && client.address ? client.address : ''}</p>`;
+            printHtml += `<p><strong>Phone:</strong> ${client && client.phone ? client.phone : ''}</p>`;
+            // Loop through categories
+            categories.forEach(cat => {
+                printHtml += `<div class="category"><h3>${cat.name}</h3>`;
+                cat.items.forEach(itemName => {
+                    const sel = selectedMap[itemName];
+                    // Determine checkbox state and price display
+                    const checked = sel ? '☑' : '☐';
+                    const priceDisplay = sel ? `$${sel.total.toFixed(2)}` : '$_______';
+                    printHtml += `<div class="item-line"><span class="checkbox">${checked}</span><span>${itemName}</span><span>${priceDisplay}</span></div>`;
+                });
+                printHtml += `</div>`;
+            });
+            // Preferred schedule checkboxes (blank, not stored in app)
+            printHtml += `<div class="category"><h3>Preferred Schedule</h3>`;
+            ['Weekly','Biweekly','Monthly','Seasonal Only'].forEach(opt => {
+                printHtml += `<span style="display:inline-block;margin-right:16px;">☐ ${opt}</span>`;
+            });
+            printHtml += `</div>`;
+            // Notes / special requests
+            printHtml += `<div class="category"><h3>Special Requests / Notes</h3>`;
+            const notes = quote.notes ? quote.notes.replace(/\n/g, '<br>') : '&nbsp;';
+            printHtml += `<div style="border:1px solid #ccc; min-height:60px; padding:8px;">${notes}</div>`;
+            printHtml += `</div>`;
+            // Total summary
+            printHtml += `<div class="category"><h3>Total Estimate</h3><p><strong>$${quote.total.toFixed(2)}</strong></p></div>`;
+            // Footer / contact info (customize as needed)
+            printHtml += `<p style="margin-top:40px;">Thank you for considering our services. We make lawns beautiful and hassle‑free!</p>`;
             printHtml += '</body></html>';
             const printWindow = window.open('', '_blank');
             printWindow.document.write(printHtml);
@@ -1394,6 +1467,7 @@
                     <td>${co ? co.toLocaleTimeString() : ''}</td>
                     <td>${log.hours ? log.hours.toFixed(2) : ''}</td>
                     <td class="actions">
+                        <button class="secondary" onclick="editTimeLog(${log.id})">Edit</button>
                         <button class="secondary" onclick="deleteTimeLog(${log.id})">Delete</button>
                     </td>
                 `;
@@ -1409,119 +1483,66 @@
             renderTimeLogs();
         }
 
-        // ------------------ Signature pad functions ------------------
-        let currentSigningQuoteId = null;
-        let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
-
-        window.openSignaturePad = function(quoteId) {
-            currentSigningQuoteId = quoteId;
+        // Edit a time log entry
+        window.editTimeLog = function(id) {
+            const log = timelogs.find(l => l.id == id);
+            if (!log) return;
+            // Populate modal fields
+            document.getElementById('edit-timelog-id').value = log.id;
+            document.getElementById('edit-timelog-date').value = log.date || '';
+            // Parse clockIn/clockOut ISO strings to HH:MM
+            const ci = log.clockIn ? new Date(log.clockIn) : null;
+            const co = log.clockOut ? new Date(log.clockOut) : null;
+            document.getElementById('edit-timelog-start').value = ci ? ci.toISOString().slice(11,16) : '';
+            document.getElementById('edit-timelog-end').value = co ? co.toISOString().slice(11,16) : '';
+            document.getElementById('edit-timelog-hours').value = (log.hours != null && !isNaN(log.hours)) ? log.hours.toFixed(2) : '';
             // Show modal
-            document.getElementById('signature-modal').classList.remove('hidden');
-            // Clear canvas
-            const canvas = document.getElementById('signature-canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            document.getElementById('timelog-edit-modal').classList.remove('hidden');
         }
 
-        function getCanvasCoords(event, canvas) {
-            const rect = canvas.getBoundingClientRect();
-            return {
-                x: event.clientX - rect.left,
-                y: event.clientY - rect.top
-            };
-        }
+        // Cancel edit time log
+        document.getElementById('cancel-timelog-edit-btn').addEventListener('click', function() {
+            document.getElementById('timelog-edit-modal').classList.add('hidden');
+        });
 
-        function startDraw(e) {
-            const canvas = document.getElementById('signature-canvas');
-            const ctx = canvas.getContext('2d');
-            const pos = getCanvasCoords(e, canvas);
-            isDrawing = true;
-            lastX = pos.x;
-            lastY = pos.y;
+        // Save edited time log
+        document.getElementById('timelog-edit-form').addEventListener('submit', function(e) {
             e.preventDefault();
-        }
-
-        function draw(e) {
-            if (!isDrawing) return;
-            const canvas = document.getElementById('signature-canvas');
-            const ctx = canvas.getContext('2d');
-            const pos = getCanvasCoords(e, canvas);
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(pos.x, pos.y);
-            ctx.stroke();
-            lastX = pos.x;
-            lastY = pos.y;
-            e.preventDefault();
-        }
-
-        function endDraw(e) {
-            isDrawing = false;
-            e.preventDefault();
-        }
-
-        // Attach canvas event listeners after DOM ready
-        document.addEventListener('DOMContentLoaded', function() {
-            const canvas = document.getElementById('signature-canvas');
-            if (canvas) {
-                canvas.addEventListener('mousedown', startDraw);
-                canvas.addEventListener('mousemove', draw);
-                canvas.addEventListener('mouseup', endDraw);
-                canvas.addEventListener('mouseout', endDraw);
-                // Touch events for mobile
-                canvas.addEventListener('touchstart', function(e) {
-                    const t = e.touches[0];
-                    startDraw({ clientX: t.clientX, clientY: t.clientY, preventDefault: () => e.preventDefault() });
-                });
-                canvas.addEventListener('touchmove', function(e) {
-                    const t = e.touches[0];
-                    draw({ clientX: t.clientX, clientY: t.clientY, preventDefault: () => e.preventDefault() });
-                });
-                canvas.addEventListener('touchend', function(e) {
-                    endDraw({ preventDefault: () => e.preventDefault() });
-                });
+            const id = parseInt(document.getElementById('edit-timelog-id').value);
+            const date = document.getElementById('edit-timelog-date').value;
+            const startTime = document.getElementById('edit-timelog-start').value;
+            const endTime = document.getElementById('edit-timelog-end').value;
+            let hoursVal = parseFloat(document.getElementById('edit-timelog-hours').value);
+            const log = timelogs.find(l => l.id == id);
+            if (log) {
+                if (date) {
+                    log.date = date;
+                }
+                if (startTime) {
+                    const startDate = new Date(date + 'T' + startTime);
+                    log.clockIn = startDate.toISOString();
+                }
+                if (endTime) {
+                    const endDate = new Date(date + 'T' + endTime);
+                    log.clockOut = endDate.toISOString();
+                }
+                if (!isNaN(hoursVal)) {
+                    log.hours = hoursVal;
+                } else {
+                    // compute hours if both times exist
+                    if (log.clockIn && log.clockOut) {
+                        const startDate = new Date(log.clockIn);
+                        const endDate = new Date(log.clockOut);
+                        log.hours = (endDate - startDate) / (1000 * 60 * 60);
+                    }
+                }
+                saveData('timelogs', timelogs);
+                renderTimeLogs();
             }
+            document.getElementById('timelog-edit-modal').classList.add('hidden');
         });
 
-        // Clear signature canvas
-        document.getElementById('clear-signature-btn').addEventListener('click', function() {
-            const canvas = document.getElementById('signature-canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        });
-
-        // Cancel signature modal
-        document.getElementById('cancel-signature-btn').addEventListener('click', function() {
-            document.getElementById('signature-modal').classList.add('hidden');
-            currentSigningQuoteId = null;
-        });
-
-        // Save signature
-        document.getElementById('save-signature-btn').addEventListener('click', function() {
-            if (currentSigningQuoteId == null) {
-                document.getElementById('signature-modal').classList.add('hidden');
-                return;
-            }
-            const canvas = document.getElementById('signature-canvas');
-            const dataUrl = canvas.toDataURL();
-            // Save to quote
-            const quote = quotes.find(q => q.id == currentSigningQuoteId);
-            if (quote) {
-                quote.signature = dataUrl;
-                saveData('quotes', quotes);
-            }
-            document.getElementById('signature-modal').classList.add('hidden');
-            // Refresh view
-            viewQuote(currentSigningQuoteId);
-            currentSigningQuoteId = null;
-        });
+        // Signature functionality has been removed.  Signature capture and modal are no longer supported.
 
         // ------------------ Tasks & Reminders ------------------
         function renderTasks() {
