@@ -123,6 +123,7 @@
         <button id="nav-services">Services</button>
         <button id="nav-quotes">Quotes</button>
         <button id="nav-jobs">Jobs</button>
+        <button id="nav-timeclock">Time Clock</button>
     </nav>
     <main>
         <!-- Clients Section -->
@@ -218,6 +219,9 @@
                     <div id="quote-total" style="margin-top: 1rem; font-weight: bold;">Total: $0.00</div>
                     <label for="quote-notes">Notes / Description</label>
                     <textarea id="quote-notes" rows="2"></textarea>
+                    <!-- Allow attaching photos to the quote -->
+                    <label for="quote-photos">Attach Photos (optional)</label>
+                    <input type="file" id="quote-photos" multiple accept="image/*" />
                     <input type="hidden" id="quote-id" />
                     <button type="submit" class="primary">Save Quote</button>
                     <button type="button" class="secondary" id="cancel-quote-btn">Cancel</button>
@@ -240,6 +244,14 @@
                 <textarea id="job-description" rows="2"></textarea>
                 <label for="job-date">Date</label>
                 <input type="date" id="job-date" />
+                <label for="job-start">Start Time</label>
+                <input type="time" id="job-start" />
+                <label for="job-end">End Time</label>
+                <input type="time" id="job-end" />
+                <label for="job-hours">Hours Worked (optional)</label>
+                <input type="number" id="job-hours" step="0.1" min="0" />
+                <label for="job-photo">Attach Photo (optional)</label>
+                <input type="file" id="job-photo" accept="image/*" />
                 <label for="job-status">Status</label>
                 <select id="job-status">
                     <option value="Scheduled">Scheduled</option>
@@ -254,12 +266,46 @@
                         <th>Date</th>
                         <th>Client</th>
                         <th>Description</th>
+                        <th>Hours</th>
                         <th>Status</th>
+                        <th>Photo</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <!-- jobs list -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Time Clock Section -->
+        <section id="section-timeclock">
+            <h2>Employee Time Clock</h2>
+            <form id="employee-form">
+                <h3>Add Employee</h3>
+                <label for="employee-name">Employee Name</label>
+                <input type="text" id="employee-name" />
+                <button type="submit" class="primary">Add Employee</button>
+            </form>
+            <div style="margin-top:1rem;">
+                <label for="clock-employee">Select Employee</label>
+                <select id="clock-employee"></select>
+                <button id="clock-in-btn" class="primary" style="margin-left:0.5rem;">Clock In</button>
+                <button id="clock-out-btn" class="secondary" style="margin-left:0.5rem;">Clock Out</button>
+                <span id="clock-status" style="margin-left:1rem; font-weight:bold;"></span>
+            </div>
+            <table id="timeentries-table" style="margin-top:1rem;">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Date</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Hours</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- time entries list -->
                 </tbody>
             </table>
         </section>
@@ -289,6 +335,8 @@
         let services = loadData('services', []);
         let quotes = loadData('quotes', []);
         let jobs = loadData('jobs', []);
+        let employees = loadData('employees', []);
+        let timeEntries = loadData('timeEntries', []);
 
         // Populate default services if none exist
         if (services.length === 0) {
@@ -323,6 +371,7 @@
                 if (target === 'section-services') renderServices();
                 if (target === 'section-quotes') renderQuotes();
                 if (target === 'section-jobs') renderJobs();
+                if (target === 'section-timeclock') renderTimeClock();
             });
         });
 
@@ -615,8 +664,18 @@
             document.getElementById('quote-total').textContent = `Total: $${total.toFixed(2)}`;
         }
 
+        // Helper to read files as DataURLs
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = err => reject(err);
+                reader.readAsDataURL(file);
+            });
+        }
+
         // Save quote
-        document.getElementById('quote-form').addEventListener('submit', function(e) {
+        document.getElementById('quote-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const quoteIdField = document.getElementById('quote-id');
             const clientId = parseInt(document.getElementById('quote-client').value);
@@ -644,6 +703,19 @@
                 const service = services.find(s => s.id == item.serviceId);
                 total += service.price * item.quantity;
             });
+            // Handle photos
+            const photoInput = document.getElementById('quote-photos');
+            const photos = [];
+            if (photoInput && photoInput.files && photoInput.files.length > 0) {
+                for (const file of photoInput.files) {
+                    try {
+                        const dataUrl = await readFileAsDataURL(file);
+                        photos.push({ name: file.name, dataUrl });
+                    } catch (err) {
+                        console.warn('Error reading file', file.name, err);
+                    }
+                }
+            }
             if (quoteIdField.value) {
                 // update existing quote
                 const q = quotes.find(qt => qt.id == quoteIdField.value);
@@ -652,6 +724,7 @@
                     q.items = items;
                     q.notes = notes;
                     q.total = total;
+                    q.photos = photos;
                 }
             } else {
                 // new quote
@@ -662,7 +735,8 @@
                     items,
                     notes,
                     total,
-                    status: 'Pending'
+                    status: 'Pending',
+                    photos
                 });
             }
             saveData('quotes', quotes);
@@ -699,6 +773,15 @@
             });
             html += `</tbody></table>`;
             html += `<p><strong>Notes:</strong> ${quote.notes || ''}</p>`;
+            // Display attached photos if any
+            if (quote.photos && quote.photos.length > 0) {
+                html += '<p><strong>Photos:</strong></p>';
+                html += '<div style="display:flex; flex-wrap:wrap; gap:8px;">';
+                quote.photos.forEach(photo => {
+                    html += `<a href="${photo.dataUrl}" target="_blank"><img src="${photo.dataUrl}" alt="Photo" style="width:80px;height:80px;object-fit:cover;border:1px solid #ccc;"></a>`;
+                });
+                html += '</div>';
+            }
             html += `<p><strong>Total:</strong> $${quote.total.toFixed(2)}</p>`;
             // Buttons: Print / Mail / Edit
             html += '<div class="actions">';
@@ -772,11 +855,19 @@
                 const client = clients.find(c => c.id == job.clientId);
                 const dateStr = job.date;
                 const tr = document.createElement('tr');
+                let photoCell = '';
+                if (job.photo) {
+                    photoCell = `<a href="${job.photo}" target="_blank"><img src="${job.photo}" alt="photo" style="width:40px;height:40px;object-fit:cover;border:1px solid #ccc;"></a>`;
+                } else {
+                    photoCell = '';
+                }
                 tr.innerHTML = `
                     <td>${dateStr}</td>
                     <td>${client ? client.name : ''}</td>
                     <td>${job.description || ''}</td>
+                    <td>${job.hours ? job.hours.toFixed(2) : ''}</td>
                     <td>${job.status}</td>
+                    <td>${photoCell}</td>
                     <td class="actions">
                         <button class="secondary" onclick="deleteJob(${job.id})">Delete</button>
                     </td>
@@ -785,17 +876,158 @@
             });
         }
 
-        document.getElementById('job-form').addEventListener('submit', function(e) {
+        // ------------------ Time Clock ------------------
+        function updateEmployeeSelect() {
+            const select = document.getElementById('clock-employee');
+            if (!select) return;
+            select.innerHTML = '<option value="">Select employee</option>';
+            employees.forEach(emp => {
+                const opt = document.createElement('option');
+                opt.value = emp.id;
+                opt.textContent = emp.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderTimeEntries() {
+            const tbody = document.querySelector('#timeentries-table tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            timeEntries.forEach(entry => {
+                const emp = employees.find(e => e.id == entry.employeeId);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${emp ? emp.name : ''}</td>
+                    <td>${entry.date}</td>
+                    <td>${entry.startTime || ''}</td>
+                    <td>${entry.endTime || ''}</td>
+                    <td>${entry.hours ? entry.hours.toFixed(2) : ''}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateClockStatus() {
+            const statusEl = document.getElementById('clock-status');
+            const select = document.getElementById('clock-employee');
+            const empId = parseInt(select.value);
+            if (!empId) {
+                statusEl.textContent = '';
+                return;
+            }
+            const openEntry = timeEntries.find(en => en.employeeId == empId && !en.endTime);
+            if (openEntry) {
+                statusEl.textContent = `Clocked in at ${openEntry.startTime}`;
+                document.getElementById('clock-in-btn').disabled = true;
+                document.getElementById('clock-out-btn').disabled = false;
+            } else {
+                statusEl.textContent = 'Not clocked in';
+                document.getElementById('clock-in-btn').disabled = false;
+                document.getElementById('clock-out-btn').disabled = true;
+            }
+        }
+
+        function renderTimeClock() {
+            updateEmployeeSelect();
+            renderTimeEntries();
+            updateClockStatus();
+        }
+
+        // Add employee
+        document.getElementById('employee-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('employee-name').value.trim();
+            if (!name) return;
+            employees.push({ id: generateId(), name });
+            saveData('employees', employees);
+            this.reset();
+            updateEmployeeSelect();
+        });
+
+        // Update clock status when employee selection changes
+        document.getElementById('clock-employee').addEventListener('change', function() {
+            updateClockStatus();
+        });
+
+        // Clock in
+        document.getElementById('clock-in-btn').addEventListener('click', function() {
+            const empId = parseInt(document.getElementById('clock-employee').value);
+            if (!empId) {
+                alert('Please select an employee');
+                return;
+            }
+            // Do not allow clock in if there is already an open entry
+            const openEntry = timeEntries.find(en => en.employeeId == empId && !en.endTime);
+            if (openEntry) {
+                alert('Employee is already clocked in');
+                return;
+            }
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0,10);
+            const timeStr = now.toTimeString().slice(0,5);
+            timeEntries.push({ id: generateId(), employeeId: empId, date: dateStr, startTime: timeStr, endTime: null, hours: null });
+            saveData('timeEntries', timeEntries);
+            updateClockStatus();
+            renderTimeEntries();
+        });
+
+        // Clock out
+        document.getElementById('clock-out-btn').addEventListener('click', function() {
+            const empId = parseInt(document.getElementById('clock-employee').value);
+            if (!empId) {
+                alert('Please select an employee');
+                return;
+            }
+            const openEntry = timeEntries.find(en => en.employeeId == empId && !en.endTime);
+            if (!openEntry) {
+                alert('Employee is not clocked in');
+                return;
+            }
+            const now = new Date();
+            const timeStr = now.toTimeString().slice(0,5);
+            openEntry.endTime = timeStr;
+            // compute hours
+            const [sh, sm] = openEntry.startTime.split(':').map(Number);
+            const [eh, em] = timeStr.split(':').map(Number);
+            let diffMinutes = (eh * 60 + em) - (sh * 60 + sm);
+            if (diffMinutes < 0) diffMinutes += 24 * 60;
+            openEntry.hours = diffMinutes / 60;
+            saveData('timeEntries', timeEntries);
+            updateClockStatus();
+            renderTimeEntries();
+        });
+        document.getElementById('job-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const clientId = parseInt(document.getElementById('job-client').value);
             const description = document.getElementById('job-description').value.trim();
             const date = document.getElementById('job-date').value;
+            const startTime = document.getElementById('job-start').value;
+            const endTime = document.getElementById('job-end').value;
+            let hours = parseFloat(document.getElementById('job-hours').value);
             const status = document.getElementById('job-status').value;
             if (!clientId) {
                 alert('Please select a client');
                 return;
             }
-            jobs.push({ id: generateId(), clientId, description, date, status });
+            // Compute hours if not provided but start/end given
+            if ((!hours || hours === 0) && startTime && endTime) {
+                const [sh, sm] = startTime.split(':').map(Number);
+                const [eh, em] = endTime.split(':').map(Number);
+                let diffMinutes = (eh * 60 + em) - (sh * 60 + sm);
+                if (diffMinutes < 0) diffMinutes += 24 * 60;
+                hours = diffMinutes / 60;
+            }
+            // Handle photo
+            let photoDataUrl = null;
+            const photoFile = document.getElementById('job-photo').files[0];
+            if (photoFile) {
+                try {
+                    photoDataUrl = await readFileAsDataURL(photoFile);
+                } catch (err) {
+                    console.warn('Error reading job photo', err);
+                }
+            }
+            jobs.push({ id: generateId(), clientId, description, date, startTime, endTime, hours, status, photo: photoDataUrl });
             saveData('jobs', jobs);
             renderJobs();
             this.reset();
@@ -813,6 +1045,7 @@
         renderServices();
         renderQuotes();
         renderJobs();
+        renderTimeClock();
     </script>
 </body>
 </html>
